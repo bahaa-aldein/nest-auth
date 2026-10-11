@@ -5,7 +5,7 @@ Sign-up and sign-in for a web app: a **NestJS + MongoDB** API and a **React + Ty
 - Sign up with email, name and password (validated on both sides)
 - Sign in, stay signed in across reloads, and log out
 - A protected endpoint (`GET /auth/me`) and a protected page ("Welcome to the application.")
-- Argon2 password hashing, a JWT in an `httpOnly` cookie, rate limiting, and no account enumeration
+- Argon2 password hashing, a JWT in an `httpOnly` cookie, rate limiting, and no account enumeration on sign-in
 
 ## Quick start
 
@@ -64,7 +64,7 @@ The backend tests start an in-memory MongoDB. The first run downloads its binary
 | Token in an `httpOnly` cookie, not `localStorage` | An XSS bug cannot read and steal it. |
 | `SameSite=Strict` | The browser never attaches the cookie to a request started by another site, which blocks CSRF. |
 | Argon2id | The current OWASP first choice, memory-hard, and free of bcrypt's 72-byte password limit. |
-| Same `401 Invalid credentials` for an unknown email and a wrong password, with a dummy hash verified for unknown emails | No account enumeration, by message or by response time. |
+| Same `401 Invalid credentials` for an unknown email and a wrong password, with a dummy hash verified for unknown emails | No account enumeration on sign-in, by message or by response time. Sign-up still returns `409` for a taken email (see Known limitations). |
 | Unique index plus handling the duplicate-key error, not a find-then-insert check | Safe when two sign-ups for the same email arrive at the same moment. |
 | Only the user id in the token | Tokens are readable by anyone who holds them, and name or email would go stale. |
 | Environment validated at startup | A missing or malformed setting stops the app immediately instead of failing at the first request. |
