@@ -4,8 +4,6 @@ export default defineConfig({
   test: {
     globals: true,
     root: './',
-    include: ['**/*.spec.ts'],
-    // The first run may need to start an in-memory MongoDB.
-    hookTimeout: 60_000,
+    include: ['tests/unit/**/*.spec.ts'],
   },
 });

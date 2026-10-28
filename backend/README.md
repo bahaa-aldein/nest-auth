@@ -45,8 +45,8 @@ node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 | `npm run start:prod` | Run the compiled build (`node dist/main`)              |
 | `npm run lint`       | oxlint (type-aware)                                    |
 | `npm run format`     | Prettier                                               |
-| `npm test`           | Unit tests                                             |
-| `npm run test:e2e`   | End-to-end tests against an in-memory MongoDB         |
+| `npm test`           | Unit tests (no database needed)                        |
+| `npm run test:e2e`   | Integration and end-to-end tests against an in-memory MongoDB |
 | `npm run test:cov`   | Unit tests with coverage                               |
 | `npm run test:watch` | Unit tests in watch mode                               |
 
@@ -100,11 +100,11 @@ Because the cookie is `SameSite=Strict`, the frontend and the API must be on the
 ## Tests
 
 ```bash
-npm test            # unit tests: DTOs, env validation, auth service, cookie options, users service, exception filter
-npm run test:e2e    # boots the real AppModule: full auth flow, rate limiting, security headers, CORS, API docs
+npm test            # unit tests: DTOs, env validation, auth service, cookie options, exception filter
+npm run test:e2e    # users service against a real database, then the real AppModule: full auth flow, rate limiting, security headers, CORS, API docs
 ```
 
-The users service spec and the e2e specs use `mongodb-memory-server`. **On the first run it downloads a MongoDB binary (about 100 MB), so it needs internet access once.** You do not need a local MongoDB for the tests.
+`npm test` needs no database and downloads nothing. The integration and e2e specs use `mongodb-memory-server`. **On the first run it downloads a MongoDB binary (about 100 MB), so it needs internet access once.** You do not need a local MongoDB for the tests.
 
 The auth e2e spec covers sign-up, duplicates, both sign-in failures, the cookie flags and lifetime, `/auth/me` with valid, tampered, forged, expired, unsigned (`alg: none`) and orphaned tokens, and sign-out.
 
@@ -132,6 +132,7 @@ src/
   health/                    GET /health
 tests/
   unit/                      unit specs, same folders as src/
+  integration/               specs that need a real database (users service)
   e2e/                       e2e specs
   utils/                     the test app factory
 ```

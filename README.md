@@ -55,7 +55,7 @@ cd backend  && npm run lint && npm test && npm run test:e2e && npm run build
 cd frontend && npm run lint && npm test && npm run build
 ```
 
-The backend tests start an in-memory MongoDB. The first run downloads its binary (about 100 MB), so it needs internet access once.
+The backend integration and e2e tests start an in-memory MongoDB. The first run downloads its binary (about 100 MB), so it needs internet access once. The unit tests (`npm test`) need no database.
 
 ## Design decisions
 
