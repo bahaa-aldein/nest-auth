@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { GlobalExceptionFilter } from './global-exception.filter.js';
+import { GlobalExceptionFilter } from '../../../../src/common/filters/global-exception.filter.js';
 
 describe('GlobalExceptionFilter', () => {
   let filter: GlobalExceptionFilter;

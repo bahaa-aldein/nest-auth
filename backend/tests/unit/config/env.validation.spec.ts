@@ -1,4 +1,4 @@
-import { validateEnv } from './env.validation.js';
+import { validateEnv } from '../../../src/config/env.validation.js';
 
 const valid = {
   MONGODB_URI: 'mongodb://localhost:27017/test',

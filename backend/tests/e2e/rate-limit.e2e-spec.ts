@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { createTestApp, TestApp } from './utils/create-test-app.js';
+import { createTestApp, TestApp } from '../utils/create-test-app.js';
 
 describe('Rate limiting (e2e)', () => {
   let testApp: TestApp;

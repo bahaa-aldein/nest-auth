@@ -1,8 +1,8 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import argon2 from 'argon2';
-import { UsersService } from '../users/users.service.js';
-import { AuthService } from './auth.service.js';
+import { UsersService } from '../../../src/users/users.service.js';
+import { AuthService } from '../../../src/auth/auth.service.js';
 
 const PASSWORD = 'Correct#1234';
 const WRONG_PASSWORD = 'Wrong#1234';

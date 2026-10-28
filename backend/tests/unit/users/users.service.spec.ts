@@ -3,9 +3,9 @@ import { getModelToken, MongooseModule } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { Model, Types } from 'mongoose';
-import { User } from './schemas/user.schema.js';
-import { UsersService } from './users.service.js';
-import { UsersModule } from './users.module.js';
+import { User } from '../../../src/users/schemas/user.schema.js';
+import { UsersService } from '../../../src/users/users.service.js';
+import { UsersModule } from '../../../src/users/users.module.js';
 
 const input = {
   email: 'jane@example.com',

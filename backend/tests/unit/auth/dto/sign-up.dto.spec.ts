@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { BadRequestException } from '@nestjs/common';
-import { createValidationPipe } from '../../app.setup.js';
-import { SignUpDto } from './sign-up.dto.js';
+import { createValidationPipe } from '../../../../src/app.setup.js';
+import { SignUpDto } from '../../../../src/auth/dto/sign-up.dto.js';
 
 const pipe = createValidationPipe();
 const parse = (body: unknown) =>

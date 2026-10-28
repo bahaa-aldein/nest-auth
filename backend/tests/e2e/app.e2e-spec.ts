@@ -3,7 +3,7 @@ import {
   createTestApp,
   TEST_ORIGIN,
   TestApp,
-} from './utils/create-test-app.js';
+} from '../utils/create-test-app.js';
 
 describe('App bootstrap (e2e)', () => {
   let testApp: TestApp;

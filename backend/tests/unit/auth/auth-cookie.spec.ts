@@ -1,7 +1,7 @@
 import {
   ACCESS_TOKEN_COOKIE,
   accessTokenCookieOptions,
-} from './auth-cookie.js';
+} from '../../../src/auth/auth-cookie.js';
 
 describe('accessTokenCookieOptions', () => {
   it('is always httpOnly, SameSite=Strict and site-wide', () => {

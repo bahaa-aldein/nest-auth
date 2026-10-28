@@ -5,10 +5,10 @@ import { Test } from '@nestjs/testing';
 import argon2 from 'argon2';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
-import { createValidationPipe } from '../app.setup.js';
-import { UsersService } from '../users/users.service.js';
-import { AuthController } from './auth.controller.js';
-import { AuthService } from './auth.service.js';
+import { createValidationPipe } from '../../../src/app.setup.js';
+import { UsersService } from '../../../src/users/users.service.js';
+import { AuthController } from '../../../src/auth/auth.controller.js';
+import { AuthService } from '../../../src/auth/auth.service.js';
 
 const PASSWORD = 'Correct#1234';
 

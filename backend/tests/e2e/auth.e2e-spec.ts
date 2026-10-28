@@ -5,7 +5,7 @@ import {
   createTestApp,
   TEST_JWT_SECRET,
   TestApp,
-} from './utils/create-test-app.js';
+} from '../utils/create-test-app.js';
 
 const user = {
   name: 'Jane Doe',

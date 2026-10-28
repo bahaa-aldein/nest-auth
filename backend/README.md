@@ -130,7 +130,10 @@ src/
     users.service.ts         persistence and lookups
   common/                    shared transforms, exception filter, CurrentUser decorator
   health/                    GET /health
-test/                        e2e specs and the test app factory
+tests/
+  unit/                      unit specs, same folders as src/
+  e2e/                       e2e specs
+  utils/                     the test app factory
 ```
 
 ## Known limitations
