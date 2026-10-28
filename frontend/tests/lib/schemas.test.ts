@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ZodType } from 'zod';
-import { signInSchema, signUpSchema } from './schemas';
+import { signInSchema, signUpSchema } from '@/lib/schemas';
 
 const valid = { name: 'Jane Doe', email: 'jane@example.com', password: 'Passw0rd!' };
 

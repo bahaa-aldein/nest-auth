@@ -53,6 +53,10 @@ src/
   features/
     auth/           provider + hook, route guards, layout, sign-in / sign-up pages
     home/           welcome page
+tests/
+  setup.ts          test setup (jest-dom matchers, cleanup)
+  lib/              schema tests
+  features/         sign-in, sign-up and home page tests
 ```
 
 `components.json` is configured, so more shadcn components can be added with `npx shadcn@latest add <name>`.

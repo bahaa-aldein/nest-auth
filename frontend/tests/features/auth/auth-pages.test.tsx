@@ -3,9 +3,9 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, api } from '@/lib/api';
-import { AuthProvider } from './auth-provider';
-import { SignInPage } from './sign-in-page';
-import { SignUpPage } from './sign-up-page';
+import { AuthProvider } from '@/features/auth/auth-provider';
+import { SignInPage } from '@/features/auth/sign-in-page';
+import { SignUpPage } from '@/features/auth/sign-up-page';
 
 vi.mock('@/lib/api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/api')>()),
