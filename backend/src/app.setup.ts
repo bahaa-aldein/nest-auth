@@ -60,7 +60,7 @@ export function configureApp(app: INestApplication): void {
     credentials: true,
   });
   app.useGlobalPipes(createValidationPipe());
-  app.enableShutdownHooks();
+  app.enableShutdownHooks([], { useProcessExit: true });
 
   if (!isProduction) configureSwagger(app);
 }
