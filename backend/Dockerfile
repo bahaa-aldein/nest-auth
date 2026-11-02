@@ -34,12 +34,19 @@ FROM base AS dev
 
 ENV NODE_ENV=development
 
+USER root
+
+RUN apt-get update && apt-get install -y --no-install-recommends procps \
+  && rm -rf /var/lib/apt/lists/*
+
+USER node
+
 RUN --mount=type=cache,target=/home/node/.npm,uid=1000,gid=1000 \
   npm config list && npm ci --include=dev
 
-FROM dev AS build
-
 WORKDIR /node/app
+
+FROM dev AS build
 
 COPY --chown=node:node . .
 
