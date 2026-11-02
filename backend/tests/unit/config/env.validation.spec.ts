@@ -1,3 +1,6 @@
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { validateEnv } from '../../../src/config/env.validation.js';
 
 const valid = {
@@ -62,5 +65,149 @@ describe('validateEnv', () => {
     expect(() =>
       validateEnv({ ...valid, JWT_SECRET: 'short', JWT_EXPIRES_IN: 'banana' }),
     ).toThrow(/JWT_SECRET[\s\S]*JWT_EXPIRES_IN/);
+  });
+
+  describe('JWT_SECRET_FILE', () => {
+    const secret = 'file-secret-'.padEnd(40, 'f');
+    const envSecret = 'env-secret-'.padEnd(40, 'e');
+    let dir: string;
+
+    beforeEach(() => {
+      dir = mkdtempSync(join(tmpdir(), 'env-validation-'));
+    });
+
+    afterEach(() => {
+      rmSync(dir, { recursive: true, force: true });
+    });
+
+    function writeSecretFile(content: string): string {
+      const path = join(dir, 'jwt_secret');
+      writeFileSync(path, content);
+      return path;
+    }
+
+    // The secret comes from the file only, as in production.
+    function configWithFile(content: string): Record<string, unknown> {
+      return {
+        ...valid,
+        JWT_SECRET: undefined,
+        JWT_SECRET_FILE: writeSecretFile(content),
+      };
+    }
+
+    function thrownBy(config: Record<string, unknown>): Error {
+      try {
+        validateEnv(config);
+      } catch (error) {
+        if (error instanceof Error) return error;
+        throw error;
+      }
+      throw new Error('validateEnv did not throw');
+    }
+
+    it('reads JWT_SECRET from the file', () => {
+      expect(validateEnv(configWithFile(secret)).JWT_SECRET).toBe(secret);
+    });
+
+    it.each([
+      ['LF', '\n'],
+      ['CRLF', '\r\n'],
+    ])(
+      'removes the %s line break at the end of the file',
+      (_name, lineBreak) => {
+        const env = validateEnv(configWithFile(secret + lineBreak));
+
+        expect(env.JWT_SECRET).toBe(secret);
+      },
+    );
+
+    it('removes only the final line break and keeps spaces', () => {
+      const padded = `  ${secret}  `;
+
+      const env = validateEnv(configWithFile(`${padded}\n\n`));
+
+      expect(env.JWT_SECRET).toBe(`${padded}\n`);
+    });
+
+    it('uses JWT_SECRET when JWT_SECRET_FILE is empty', () => {
+      const env = validateEnv({ ...valid, JWT_SECRET_FILE: '' });
+
+      expect(env.JWT_SECRET).toBe(valid.JWT_SECRET);
+    });
+
+    it('uses the file when JWT_SECRET is empty, as in .env.example', () => {
+      const env = validateEnv({ ...configWithFile(secret), JWT_SECRET: '' });
+
+      expect(env.JWT_SECRET).toBe(secret);
+    });
+
+    it('rejects JWT_SECRET and JWT_SECRET_FILE together', () => {
+      const config = { ...configWithFile(secret), JWT_SECRET: envSecret };
+
+      expect(() => validateEnv(config)).toThrow(
+        /either JWT_SECRET or JWT_SECRET_FILE/,
+      );
+    });
+
+    it('names the path when the file does not exist', () => {
+      const path = join(dir, 'missing');
+
+      expect(() =>
+        validateEnv({ ...valid, JWT_SECRET: undefined, JWT_SECRET_FILE: path }),
+      ).toThrow(`JWT_SECRET_FILE: cannot read the file at ${path}`);
+    });
+
+    it('keeps the system error as the cause, so the log shows why', () => {
+      const error = thrownBy({
+        ...valid,
+        JWT_SECRET: undefined,
+        JWT_SECRET_FILE: join(dir, 'missing'),
+      });
+
+      expect(error).toMatchObject({ cause: { code: 'ENOENT' } });
+    });
+
+    it('rejects a folder instead of a file', () => {
+      expect(() =>
+        validateEnv({ ...valid, JWT_SECRET: undefined, JWT_SECRET_FILE: dir }),
+      ).toThrow(/JWT_SECRET_FILE: cannot read the file/);
+    });
+
+    it.each([
+      ['an empty file', ''],
+      ['a file with only a line break', '\n'],
+      ['a file with a short secret', 'short-secret'],
+    ])('rejects %s', (_name, content) => {
+      expect(() => validateEnv(configWithFile(content))).toThrow(
+        /JWT_SECRET must be at least 32 characters/,
+      );
+    });
+
+    it('does not print a rejected secret from the file', () => {
+      const shortSecret = 'leaky-short-secret';
+
+      const { message } = thrownBy(configWithFile(shortSecret));
+
+      expect(message).toMatch(/JWT_SECRET/);
+      expect(message).not.toContain(shortSecret);
+    });
+
+    it('does not print either secret when both are set', () => {
+      const { message } = thrownBy({
+        ...configWithFile(secret),
+        JWT_SECRET: envSecret,
+      });
+
+      expect(message).not.toContain(secret);
+      expect(message).not.toContain(envSecret);
+    });
+
+    it('does not change the config it receives', () => {
+      const config = configWithFile(secret);
+
+      validateEnv(config);
+
+      expect(config.JWT_SECRET).toBeUndefined();
+    });
   });
 });

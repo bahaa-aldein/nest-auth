@@ -32,9 +32,12 @@ node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 | `NODE_ENV`       | no       | `development` | `development`, `production` or `test`                        |
 | `PORT`           | no       | `3000`        | HTTP port                                                    |
 | `MONGODB_URI`    | yes      |               | `mongodb://` or `mongodb+srv://` connection string           |
-| `JWT_SECRET`     | yes      |               | Signing secret, at least 32 characters                       |
+| `JWT_SECRET`     | yes, unless `JWT_SECRET_FILE` is set |  | Signing secret, at least 32 characters |
+| `JWT_SECRET_FILE` | no      |               | Path of a file that holds the signing secret, used in place of `JWT_SECRET`. Setting both stops the app at startup |
 | `JWT_EXPIRES_IN` | no       | `15m`         | Access token lifetime: a number with a unit, such as `900s`, `15m`, `1h` or `7d`. Anything else stops the app at startup |
 | `CORS_ORIGIN`    | yes      |               | The one browser origin allowed to call the API, with credentials. Use `http://localhost:5173` for the frontend dev server |
+
+**Secret files.** `docker inspect` shows every environment variable of a container, so in production keep the secret in a file instead, for example a Docker secret mounted at `/run/secrets/jwt_secret`, and set `JWT_SECRET_FILE` to its path. The content of the file is the secret. One line break at the end of the file is removed, and spaces are kept. The 32-character rule applies to the content. Error messages show the path of the file, never its content.
 
 ## Scripts
 
