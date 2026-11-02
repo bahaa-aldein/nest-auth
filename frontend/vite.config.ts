@@ -6,7 +6,12 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: { alias: { '@': path.resolve(import.meta.dirname, 'src') } },
-  server: { port: 5173, strictPort: true },
+  server: {
+    port: 5173,
+    strictPort: true,
+    watch: { usePolling: true },
+    fs: { allow: ['.', '/node'] },
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],

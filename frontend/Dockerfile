@@ -2,9 +2,9 @@ ARG NODE_VERSION=24
 ARG NODE_IMAGE=node:${NODE_VERSION}-trixie-slim
 ARG NGINX_IMAGE=nginx:1.30-alpine
 
-FROM ${NODE_IMAGE} AS build
+FROM ${NODE_IMAGE} AS dev
 
-RUN mkdir -p /node/app && chown -R node:node /node
+RUN mkdir -p /node/app/node_modules && chown -R node:node /node
 
 WORKDIR /node
 
@@ -16,6 +16,8 @@ RUN --mount=type=cache,target=/home/node/.npm,uid=1000,gid=1000 \
   npm config list && npm ci
 
 WORKDIR /node/app
+
+FROM dev AS build
 
 COPY --chown=node:node . .
 
