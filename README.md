@@ -12,8 +12,8 @@ Sign-up and sign-in for a web app: a **NestJS + MongoDB** API and a **React + Ty
 You need Node.js 22 or newer and Docker (for MongoDB).
 
 ```bash
-# 1. MongoDB, listening on localhost only
-docker compose up -d
+# 1. MongoDB, listening on localhost only (the API and the web app run on your PC below)
+docker compose up -d mongo
 
 # 2. API: http://localhost:3000 (Swagger docs at /docs)
 cd backend
@@ -30,6 +30,8 @@ npm run dev
 
 On Windows PowerShell, use `Copy-Item .env.example .env` instead of `cp`.
 
+**Everything in Docker (development):** after you create `backend/.env` with a `JWT_SECRET`, run `docker compose up -d --build`. It starts MongoDB, the API and the web app together, with live reload. The `backend/` and `frontend/` folders are mounted into the containers, and the watchers poll, because file events from Windows do not reach containers. To debug the API, attach VS Code to `127.0.0.1:9229` (the "Attach to api (Docker)" configuration). `docker compose down` stops everything and keeps your data. `docker compose down -v` also deletes it.
+
 Open the app at **`http://localhost:5173`**, not `127.0.0.1`. The session cookie is `SameSite=Strict`, so the app and the API must be on the same site, and `localhost` is the same site for both.
 
 ## Repository layout
@@ -38,7 +40,8 @@ Open the app at **`http://localhost:5173`**, not `127.0.0.1`. The session cookie
 | -------------------- | ----------------------------------------------------------------------- |
 | `backend/`           | NestJS API. See [backend/README.md](backend/README.md)                  |
 | `frontend/`          | React + Vite app. See [frontend/README.md](frontend/README.md)          |
-| `docker-compose.yml` | MongoDB for local development                                           |
+| `compose.yaml`       | Services shared by every environment: MongoDB, start order, logging     |
+| `compose.override.yaml` | Development: mounts, live reload, debugger port. Compose reads it by itself |
 | `.github/workflows/` | CI: lint, test and build for both apps on every push and pull request  |
 
 ## How sign-in works

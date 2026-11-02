@@ -10,7 +10,7 @@ You need Node.js (current LTS) and a MongoDB instance, either local or an Atlas 
 
 ```bash
 # optional: start a local MongoDB (run from the repository root; it listens on localhost only)
-docker compose up -d
+docker compose up -d mongo
 
 npm install
 cp .env.example .env      # then fill in JWT_SECRET (see below)
@@ -92,7 +92,7 @@ curl -b cookies.txt -X POST http://localhost:3000/auth/sign-out
 - **No account enumeration:** unknown emails and wrong passwords return the same `401 Invalid credentials`, and an unknown email still pays the cost of a real Argon2 verification so response times match.
 - **Duplicate emails** are enforced by a unique index (`409`), which is safe under concurrent requests.
 - **Rate limiting:** 100 requests per minute per IP globally, and 5 per minute on sign-up and sign-in.
-- **Hardening:** Helmet security headers including a Content-Security-Policy (relaxed only for the Swagger UI under `/docs`), CORS limited to a single origin, request bodies whitelisted and validated, environment validated at startup, and the unauthenticated MongoDB in `docker-compose.yml` bound to localhost.
+- **Hardening:** Helmet security headers including a Content-Security-Policy (relaxed only for the Swagger UI under `/docs`), CORS limited to a single origin, request bodies whitelisted and validated, environment validated at startup, and the unauthenticated MongoDB in `compose.override.yaml` bound to localhost.
 - **Errors:** a global exception filter logs server-side details and returns a generic body for unexpected errors, so internals never reach the client.
 
 Because the cookie is `SameSite=Strict`, the frontend and the API must be on the same site (for example `localhost` for both in development). Use `localhost`, not `127.0.0.1`, on both sides.
