@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import type { JwtSignOptions } from '@nestjs/jwt';
-import { plainToInstance } from 'class-transformer';
+import { plainToInstance, Transform } from 'class-transformer';
 import {
   IsEnum,
   IsInt,
@@ -58,6 +58,17 @@ export class EnvironmentVariables {
 
   @IsUrl({ require_tld: false, require_protocol: true })
   CORS_ORIGIN: string;
+
+  // Optional. The message never shows the value, because a Redis address can
+  // hold a password.
+  @Transform(({ value }: { value: unknown }) =>
+    value === '' ? undefined : value,
+  )
+  @IsOptional()
+  @Matches(/^rediss?:\/\//, {
+    message: 'REDIS_URL must start with redis:// or rediss://',
+  })
+  REDIS_URL?: string;
 }
 
 export function validateEnv(config: RawConfig): EnvironmentVariables {

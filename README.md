@@ -51,6 +51,7 @@ docker compose -f compose.yaml -f compose.production.yaml up -d --build --scale 
 ```
 
 - Only the `web` container publishes a port (`HTTP_PORT`, default 8080). It serves the React app and passes `/api/...` to the API copies with the `/api` part removed. The API and MongoDB have no published port.
+- A `redis` container keeps the rate-limit counters, so the three API copies share one limit (`REDIS_URL`). It has no published port, no password and no volume. If Redis fails, each copy counts alone until it is back.
 - The session cookie is `Secure` in production. Chrome accepts it on `http://localhost`; a real server needs HTTPS.
 - The JWT secret and the MongoDB root password reach the containers as files in `/run/secrets` (`JWT_SECRET_FILE`, `MONGO_INITDB_ROOT_PASSWORD_FILE`), so `docker inspect` does not show them. **Known limit:** the MongoDB password is also part of `MONGODB_URI`, so `docker inspect` of an API container shows it.
 - Never paste the output of `docker compose config`: it prints the real values taken from `.env`.

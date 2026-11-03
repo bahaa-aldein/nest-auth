@@ -166,4 +166,39 @@ describe('RedisThrottlerStorage (with a fake Redis client)', () => {
       },
     );
   });
+
+  describe('when the app stops', () => {
+    it('closes the connection to Redis', async () => {
+      const quit = vi.fn().mockResolvedValue('OK');
+      const storage = new RedisThrottlerStorage(
+        { ...clientAnswering([1, 60_000]), quit },
+        fallbackStorage(),
+      );
+
+      await storage.onApplicationShutdown();
+
+      expect(quit).toHaveBeenCalledOnce();
+    });
+
+    it('does not fail when the connection is already gone', async () => {
+      const quit = vi
+        .fn()
+        .mockRejectedValue(new Error('Connection is closed.'));
+      const storage = new RedisThrottlerStorage(
+        { ...clientAnswering([1, 60_000]), quit },
+        fallbackStorage(),
+      );
+
+      await expect(storage.onApplicationShutdown()).resolves.toBeUndefined();
+    });
+
+    it('does not fail when the client has no quit method', async () => {
+      const storage = new RedisThrottlerStorage(
+        clientAnswering([1, 60_000]),
+        fallbackStorage(),
+      );
+
+      await expect(storage.onApplicationShutdown()).resolves.toBeUndefined();
+    });
+  });
 });

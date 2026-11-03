@@ -210,4 +210,45 @@ describe('validateEnv', () => {
       expect(config.JWT_SECRET).toBeUndefined();
     });
   });
+
+  describe('REDIS_URL', () => {
+    it('is optional', () => {
+      expect(validateEnv(valid).REDIS_URL).toBeUndefined();
+    });
+
+    it.each([
+      ['redis://redis:6379'],
+      ['rediss://cache.example.com:6380'],
+      ['redis://:a-password@redis:6379/1'],
+    ])('accepts %s', (REDIS_URL) => {
+      expect(validateEnv({ ...valid, REDIS_URL }).REDIS_URL).toBe(REDIS_URL);
+    });
+
+    it('counts an empty value as not set', () => {
+      expect(
+        validateEnv({ ...valid, REDIS_URL: '' }).REDIS_URL,
+      ).toBeUndefined();
+    });
+
+    it.each([
+      'http://redis:6379',
+      'redis:6379',
+      'localhost',
+      'mongodb://redis',
+    ])('rejects %s', (REDIS_URL) => {
+      expect(() => validateEnv({ ...valid, REDIS_URL })).toThrow(/REDIS_URL/);
+    });
+
+    it('never prints the value of a rejected address, which can hold a password', () => {
+      let message = '';
+      try {
+        validateEnv({ ...valid, REDIS_URL: 'http://user:hunter2@redis:6379' });
+      } catch (error) {
+        message = error instanceof Error ? error.message : '';
+      }
+
+      expect(message).toMatch(/REDIS_URL/);
+      expect(message).not.toContain('hunter2');
+    });
+  });
 });

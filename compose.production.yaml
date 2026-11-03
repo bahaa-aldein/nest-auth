@@ -13,8 +13,12 @@ services:
       - CORS_ORIGIN=http://localhost:8080
       - MONGODB_URI=mongodb://root:${MONGO_PASSWORD}@mongo:27017/nest-auth?authSource=admin
       - JWT_SECRET_FILE=/run/secrets/jwt_secret
+      - REDIS_URL=redis://redis:6379
     secrets:
       - jwt_secret
+    depends_on:
+      redis:
+        condition: service_healthy
 
   # web is also the proxy. The same nginx image serves the React files and passes /api to the
   # api copies, so there is one image and one container for both jobs. The mounted file
@@ -31,6 +35,24 @@ services:
       - "${HTTP_PORT:-8080}:80"
     volumes:
       - ./proxy/default.conf:/etc/nginx/conf.d/default.conf:ro
+
+  # Shared rate-limit counters: no volume (they live for a minute), no published port,
+  # no password (only this stack reaches it).
+  # The x-logging anchor does not work across files, so the log rotation is repeated.
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   mongo:
     restart: unless-stopped
