@@ -34,6 +34,28 @@ On Windows PowerShell, use `Copy-Item .env.example .env` instead of `cp`.
 
 Open the app at **`http://localhost:5173`**, not `127.0.0.1`. The session cookie is `SameSite=Strict`, so the app and the API must be on the same site, and `localhost` is the same site for both.
 
+## Production stack
+
+`compose.production.yaml` runs the built images the way a server would: one public address, a database that needs a login, and three API copies. It has its own project name (`nest-auth-prod`), so it never touches the data of the development stack. Always pass both files, so that `compose.override.yaml` is left out.
+
+First time only, create the two secret files. Both are ignored by git. The command writes a new random MongoDB password and a new JWT secret, so do not run it again later: Mongo keeps the first password in its volume, and the API could no longer log in.
+
+```bash
+node -e "const fs=require('fs'),c=require('crypto');fs.mkdirSync('secrets',{recursive:true});fs.writeFileSync('.env','MONGO_PASSWORD='+c.randomBytes(24).toString('hex'));fs.writeFileSync('secrets/jwt_secret',c.randomBytes(48).toString('hex'))"
+```
+
+Then start the stack and open **`http://localhost:8080`** in Chrome:
+
+```bash
+docker compose -f compose.yaml -f compose.production.yaml up -d --build --scale api=3
+```
+
+- Only the `web` container publishes a port (`HTTP_PORT`, default 8080). It serves the React app and passes `/api/...` to the API copies with the `/api` part removed. The API and MongoDB have no published port.
+- The session cookie is `Secure` in production. Chrome accepts it on `http://localhost`; a real server needs HTTPS.
+- The JWT secret and the MongoDB root password reach the containers as files in `/run/secrets` (`JWT_SECRET_FILE`, `MONGO_INITDB_ROOT_PASSWORD_FILE`), so `docker inspect` does not show them. **Known limit:** the MongoDB password is also part of `MONGODB_URI`, so `docker inspect` of an API container shows it.
+- Never paste the output of `docker compose config`: it prints the real values taken from `.env`.
+- `docker compose -f compose.yaml -f compose.production.yaml down` keeps the data in the volume `nest-auth-prod_mongo-data`. Adding `-v` deletes it.
+
 ## Repository layout
 
 | Path                 | What it is                                                              |
@@ -42,6 +64,9 @@ Open the app at **`http://localhost:5173`**, not `127.0.0.1`. The session cookie
 | `frontend/`          | React + Vite app. See [frontend/README.md](frontend/README.md)          |
 | `compose.yaml`       | Services shared by every environment: MongoDB, start order, logging     |
 | `compose.override.yaml` | Development: mounts, live reload, debugger port. Compose reads it by itself |
+| `compose.production.yaml` | Production: built images, one public port, three API copies, secret files |
+| `proxy/`             | nginx config for the production `web` container: static files and `/api`  |
+| `.env.example`       | Settings for the production stack (`MONGO_PASSWORD`)                   |
 | `.github/workflows/` | CI: lint, test and build for both apps on every push and pull request  |
 
 ## How sign-in works
