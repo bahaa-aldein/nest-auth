@@ -36,6 +36,7 @@ node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 | `JWT_SECRET_FILE` | no      |               | Path of a file that holds the signing secret, used in place of `JWT_SECRET`. Setting both stops the app at startup |
 | `JWT_EXPIRES_IN` | no       | `15m`         | Access token lifetime: a number with a unit, such as `900s`, `15m`, `1h` or `7d`. Anything else stops the app at startup |
 | `CORS_ORIGIN`    | yes      |               | The one browser origin allowed to call the API, with credentials. Use `http://localhost:5173` for the frontend dev server |
+| `REDIS_URL`      | no       |               | `redis://` or `rediss://` address. Keeps the rate-limit counters in Redis, so several API copies share them. Without it, each copy counts in its own memory. If Redis fails, the API counts in memory and logs an error |
 
 **Secret files.** `docker inspect` shows every environment variable of a container, so in production keep the secret in a file instead, for example a Docker secret mounted at `/run/secrets/jwt_secret`, and set `JWT_SECRET_FILE` to its path. The content of the file is the secret. One line break at the end of the file is removed, and spaces are kept. The 32-character rule applies to the content. Error messages show the path of the file, never its content.
 
@@ -146,4 +147,4 @@ tests/
 - Sign-out clears the cookie in the browser, but the JWT itself is stateless: a copy of it stays valid until it expires. Revoking tokens immediately would need a server-side deny list or session store.
 - Registering an already-used email returns `409`, which reveals that the address has an account. Closing that gap needs an email-verification flow.
 - There is no email verification or password reset.
-- Rate-limit counters are kept in memory per instance and keyed by IP. Behind a reverse proxy, enable Express `trust proxy`, otherwise all clients share one bucket. Multiple instances would need a shared store such as Redis.
+- Rate-limit counters are keyed by client IP. Express trusts one proxy (`trust proxy` is `1`), so the API must run behind exactly one reverse proxy, such as the nginx of the production stack, and must not be reachable directly: a client could write its own `X-Forwarded-For` header. Without `REDIS_URL`, each instance counts in its own memory, so with several instances the real limit is higher. With `REDIS_URL`, all instances share the counters. If Redis fails, each instance counts alone until Redis is back.

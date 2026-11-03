@@ -13,8 +13,19 @@ export interface TestApp {
   close: () => Promise<void>;
 }
 
-export async function createTestApp(): Promise<TestApp> {
+interface TestAppOptions {
+  // Keep the rate-limit counters in this Redis. Without it, the app counts in memory.
+  redisUrl?: string;
+}
+
+export async function createTestApp(
+  options: TestAppOptions = {},
+): Promise<TestApp> {
   const mongod = await MongoMemoryServer.create();
+
+  // A REDIS_URL in the shell must not leak into tests that do not ask for Redis.
+  if (options.redisUrl) process.env.REDIS_URL = options.redisUrl;
+  else delete process.env.REDIS_URL;
 
   // AppModule reads process.env when it is first imported, so set the environment first.
   Object.assign(process.env, {

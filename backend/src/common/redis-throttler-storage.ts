@@ -31,6 +31,7 @@ export interface ScriptRunner {
     numberOfKeys: number,
     ...args: (string | number)[]
   ): Promise<unknown>;
+  quit?(): Promise<unknown>;
 }
 
 function readCount(answer: unknown): {
@@ -97,6 +98,16 @@ export class RedisThrottlerStorage implements ThrottlerStorage {
         blockDuration,
         throttlerName,
       );
+    }
+  }
+
+  // Nest calls this when the app stops, because the throttler module provides this
+  // class. It closes the connection to Redis cleanly.
+  async onApplicationShutdown(): Promise<void> {
+    try {
+      await this.client.quit?.();
+    } catch {
+      // Redis is already unreachable, so there is nothing left to close.
     }
   }
 }
