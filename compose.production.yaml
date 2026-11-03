@@ -7,6 +7,8 @@ services:
       context: ./backend
       target: prod
     restart: unless-stopped
+    # Must stay above SHUTDOWN_FORCE_MS (15 seconds) in backend/src/common/shutdown.service.ts,
+    # so the api ends a stuck shutdown by itself, with a log, before Docker kills it.
     stop_grace_period: 20s
     environment:
       - NODE_ENV=production
