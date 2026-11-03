@@ -101,6 +101,26 @@ curl -b cookies.txt -X POST http://localhost:3000/auth/sign-out
 
 Because the cookie is `SameSite=Strict`, the frontend and the API must be on the same site (for example `localhost` for both in development). Use `localhost`, not `127.0.0.1`, on both sides.
 
+## Stopping the API
+
+When the process gets `SIGTERM` (`docker stop`, `docker compose stop`, a deploy), the API:
+
+1. logs `SIGTERM received: finishing the running requests, then stopping`;
+2. stops accepting new connections, and `GET /health/ready` answers `503`;
+3. waits for the requests that are running, so none of them is cut;
+4. closes MongoDB and Redis, logs `Shutdown complete`, and exits with code `0`.
+
+If the running requests do not finish in time, the API logs an error, closes all connections and exits with code `1`, before Docker has to kill it. The numbers must fit together:
+
+| Setting | Value | Where | Rule |
+| --- | --- | --- | --- |
+| Longest normal request | under 1 second | | Argon2 and one or two MongoDB calls |
+| Drain delay | none | | nginx does not read `/health/ready`, so waiting would not help |
+| `SHUTDOWN_FORCE_MS` | 15 seconds | `src/common/shutdown.service.ts` | More than the longest request |
+| `stop_grace_period` | 20 seconds | `compose.production.yaml` | More than `SHUTDOWN_FORCE_MS`. After it, Docker kills the process: exit code `137` and no log |
+
+Mongoose waits up to 30 seconds for a database server, so a request that waits for a missing MongoDB can be cut by the 15-second limit. The signal only reaches the app because the production image starts `node` directly, behind `tini`. A start through `npm` would not pass the signal on.
+
 ## Tests
 
 ```bash
