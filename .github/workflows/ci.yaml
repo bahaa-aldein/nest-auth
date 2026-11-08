@@ -92,3 +92,25 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  docker:
+    name: Docker (${{ matrix.app }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [backend, frontend]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Check the Dockerfile
+        run: docker build --check ${{ matrix.app }}
+
+      - name: Build the test target
+        run: docker build --target test ${{ matrix.app }}
+
+      - name: Build the audit target
+        if: matrix.app == 'backend'
+        run: docker build --target audit ${{ matrix.app }}
