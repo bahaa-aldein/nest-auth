@@ -1,0 +1,55 @@
+# Development only. Compose reads this file by itself, on top of compose.yaml.
+#
+# Watchers: the code is bind-mounted from the Windows folders, and file events from
+# Windows do not reach the containers, so both watchers poll:
+#   - api: TSC_WATCHFILE makes the TypeScript watcher of `nest start --watch` poll.
+#   - web: server.watch.usePolling in frontend/vite.config.ts.
+# Why the bind mount and not Compose Watch: the dev stages have no source code (the
+# code comes from the mount), and both services then work the same way.
+# Polling costs some CPU. The api dev image also has `ps` (procps), because the Nest
+# CLI needs it to kill the old process at every restart.
+
+services:
+  api:
+    build:
+      context: ./backend
+      target: dev
+    ports:
+      - "3000:3000"
+      # The debugger: published on localhost only, because it allows code execution.
+      - "127.0.0.1:9229:9229"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - ./backend:/node/app
+      - /node/app/node_modules
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/nest-auth
+      - TSC_WATCHFILE=PriorityPollingInterval
+    # The inspector must listen on 0.0.0.0 inside the container to be reachable.
+    command: npm run start:debug -- --debug=0.0.0.0:9229
+
+  web:
+    build:
+      context: ./frontend
+      target: dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/node/app
+      - /node/app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+
+  mongo:
+    ports:
+      - "127.0.0.1:27017:27017"

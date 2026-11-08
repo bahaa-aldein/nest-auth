@@ -1,0 +1,32 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  api:
+    logging: *default-logging
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  web:
+    logging: *default-logging
+    depends_on:
+      api:
+        condition: service_healthy
+
+  mongo:
+    image: mongo:8
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:

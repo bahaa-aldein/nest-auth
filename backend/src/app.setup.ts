@@ -1,5 +1,6 @@
 import { INestApplication, Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import type { NextFunction, Request, Response } from 'express';
@@ -35,7 +36,7 @@ function configureSwagger(app: INestApplication): void {
   );
 }
 
-export function configureApp(app: INestApplication): void {
+export function configureApp(app: NestExpressApplication): void {
   const config =
     app.get<ConfigService<EnvironmentVariables, true>>(ConfigService);
   const isProduction =
@@ -60,7 +61,12 @@ export function configureApp(app: INestApplication): void {
     credentials: true,
   });
   app.useGlobalPipes(createValidationPipe());
-  app.enableShutdownHooks();
+  app.enableShutdownHooks([], { useProcessExit: true });
+  // nginx is the only proxy in front of the api (nothing else can reach port 3000 in
+  // production), so take the client address from its X-Forwarded-For header. Without
+  // this, every user has the address of nginx and shares one rate limit. A bigger
+  // number would let a client choose its own address.
+  app.set('trust proxy', 1);
 
   if (!isProduction) configureSwagger(app);
 }
