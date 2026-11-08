@@ -3,9 +3,6 @@ import net, { type AddressInfo } from 'node:net';
 import { Logger } from '@nestjs/common';
 import { createTestApp, TestApp } from '../utils/create-test-app.js';
 
-const wait = (milliseconds: number) =>
-  new Promise((resolve) => setTimeout(resolve, milliseconds));
-
 const connectOnce = (port: number) =>
   new Promise<void>((resolve, reject) => {
     const socket = net.connect({ port, host: '127.0.0.1' });
@@ -47,6 +44,12 @@ describe('Graceful shutdown (e2e)', () => {
       email: 'slow@example.com',
       password: 'Wrong#1234',
     });
+    // A fixed wait fails when connecting is slow, so wait for the request itself.
+    const requestStarted = new Promise<void>((resolve) => {
+      (testApp.app.getHttpServer() as http.Server).once('request', () =>
+        resolve(),
+      );
+    });
     const answer = new Promise<number>((resolve, reject) => {
       const request = http.request(
         {
@@ -69,7 +72,7 @@ describe('Graceful shutdown (e2e)', () => {
       request.write(body.slice(0, 10));
       setTimeout(() => request.end(body.slice(10)), 600);
     });
-    await wait(200);
+    await requestStarted;
 
     let finished = false;
     const stopping = testApp.close().then(() => {
