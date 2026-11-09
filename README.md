@@ -36,7 +36,7 @@ Open the app at **`http://localhost:5173`**, not `127.0.0.1`. The session cookie
 
 ## Production stack
 
-`compose.production.yaml` runs the built images the way a server would: one public address, a database that needs a login, and three API copies. It has its own project name (`nest-auth-prod`), so it never touches the data of the development stack. Always pass both files, so that `compose.override.yaml` is left out.
+`compose.production.yaml` runs the images that CI publishes to GitHub's container registry (GHCR) the way a server would: one public address, a database that needs a login, and three API copies. It has its own project name (`nest-auth-prod`), so it never touches the data of the development stack. Always pass both files, so that `compose.override.yaml` is left out.
 
 First time only, create the two secret files. Both are ignored by git. The command writes a new random MongoDB password and a new JWT secret, so do not run it again later: Mongo keeps the first password in its volume, and the API could no longer log in.
 
@@ -44,10 +44,11 @@ First time only, create the two secret files. Both are ignored by git. The comma
 node -e "const fs=require('fs'),c=require('crypto');fs.mkdirSync('secrets',{recursive:true});fs.writeFileSync('.env','MONGO_PASSWORD='+c.randomBytes(24).toString('hex'));fs.writeFileSync('secrets/jwt_secret',c.randomBytes(48).toString('hex'))"
 ```
 
-Then start the stack and open **`http://localhost:8080`** in Chrome:
+Then pull the images (they are public, so no login is needed), start the stack, and open **`http://localhost:8080`** in Chrome:
 
 ```bash
-docker compose -f compose.yaml -f compose.production.yaml up -d --build --scale api=3
+docker compose -f compose.yaml -f compose.production.yaml pull
+docker compose -f compose.yaml -f compose.production.yaml up -d --scale api=3
 ```
 
 - Only the `web` container publishes a port (`HTTP_PORT`, default 8080). It serves the React app and passes `/api/...` to the API copies with the `/api` part removed. The API and MongoDB have no published port.
@@ -57,6 +58,8 @@ docker compose -f compose.yaml -f compose.production.yaml up -d --build --scale 
 - The JWT secret and the MongoDB root password reach the containers as files in `/run/secrets` (`JWT_SECRET_FILE`, `MONGO_INITDB_ROOT_PASSWORD_FILE`), so `docker inspect` does not show them. **Known limit:** the MongoDB password is also part of `MONGODB_URI`, so `docker inspect` of an API container shows it.
 - Never paste the output of `docker compose config`: it prints the real values taken from `.env`.
 - `docker compose -f compose.yaml -f compose.production.yaml down` keeps the data in the volume `nest-auth-prod_mongo-data`. Adding `-v` deletes it.
+- **The version is the tag in `compose.production.yaml`.** For every merge into `main`, CI publishes `ghcr.io/bahaa-aldein/nest-auth-api` and `ghcr.io/bahaa-aldein/nest-auth-web` with two tags: `sha-<first 7 characters of the commit>` and `latest`. The file uses a `sha-` tag, because a `sha-` tag never moves and `latest` does. To deploy a new version, change the tag of both images, run `pull`, and then run `up -d` again. The image label `org.opencontainers.image.revision` holds the full commit, and a running container shows it: `docker inspect <container> --format '{{index .Config.Labels "org.opencontainers.image.revision"}}'`.
+- The file has no `build:` section. To test a change that CI has not published yet, build the image yourself (the web image needs `--build-arg VITE_API_URL=/api`, because Vite writes the address into the JavaScript at build time) and use its name in a copy of the file.
 
 ## Repository layout
 
@@ -66,10 +69,10 @@ docker compose -f compose.yaml -f compose.production.yaml up -d --build --scale 
 | `frontend/`          | React + Vite app. See [frontend/README.md](frontend/README.md)          |
 | `compose.yaml`       | Services shared by every environment: MongoDB, start order, logging     |
 | `compose.override.yaml` | Development: mounts, live reload, debugger port. Compose reads it by itself |
-| `compose.production.yaml` | Production: built images, one public port, three API copies, secret files |
+| `compose.production.yaml` | Production: published images (tags in the file), one public port, three API copies, secret files |
 | `proxy/`             | nginx config for the production `web` container: static files and `/api`  |
 | `.env.example`       | Settings for the production stack (`MONGO_PASSWORD`)                   |
-| `.github/workflows/` | CI: lint, test and build for both apps on every push and pull request  |
+| `.github/workflows/` | CI: lint, test and Docker checks for both apps on every push and pull request. A push to `main` also scans the images and publishes them to GHCR |
 
 ## How sign-in works
 

@@ -129,9 +129,11 @@ jobs:
         include:
           - app: backend
             image: ghcr.io/bahaa-aldein/nest-auth-api
+            title: nest-auth-api
             build_args: ""
           - app: frontend
             image: ghcr.io/bahaa-aldein/nest-auth-web
+            title: nest-auth-web
             build_args: VITE_API_URL=/api
     steps:
       - name: Checkout
@@ -147,8 +149,10 @@ jobs:
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ${{ matrix.image }}
+          labels: |
+            org.opencontainers.image.title=${{ matrix.title }}
           tags: |
-            type=sha
+            type=sha,priority=300
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build the image
