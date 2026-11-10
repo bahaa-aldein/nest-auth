@@ -14,7 +14,9 @@ LABEL org.opencontainers.image.title="backend" \
 
 ENV NODE_ENV=production
 
-RUN apt-get update && apt-get install -y --no-install-recommends tini \
+# The upgrade brings in the security fixes that the Node image does not have yet.
+RUN apt-get update && apt-get upgrade -y \
+  && apt-get install -y --no-install-recommends tini \
   && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /node/app && chown -R node:node /node
@@ -66,6 +68,13 @@ FROM test AS audit
 RUN npm audit --omit=dev --audit-level=high
 
 FROM base AS prod
+
+USER root
+
+# The final image never runs npm. Removing it also removes the npm packages that scanners report.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+
+USER node
 
 WORKDIR /node/app
 
