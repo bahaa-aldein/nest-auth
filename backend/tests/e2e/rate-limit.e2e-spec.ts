@@ -36,6 +36,18 @@ describe('Rate limiting (e2e)', () => {
     expect(statuses.every((status) => status === 200)).toBe(true);
   });
 
+  it('does not throttle the readiness check', async () => {
+    const statuses = await Promise.all(
+      Array.from({ length: 110 }, () =>
+        http()
+          .get('/health/ready')
+          .then((res) => res.status),
+      ),
+    );
+
+    expect(statuses.every((status) => status === 200)).toBe(true);
+  });
+
   it('counts the limit per client address behind a proxy', async () => {
     // supertest plays the role of nginx: it sends the client address in X-Forwarded-For.
     const attemptFrom = (ip: string) =>
