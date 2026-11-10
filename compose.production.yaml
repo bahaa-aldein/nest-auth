@@ -2,7 +2,7 @@ name: nest-auth-prod
 
 services:
   api:
-    image: ghcr.io/bahaa-aldein/nest-auth-api:sha-2475b12
+    image: ghcr.io/bahaa-aldein/nest-auth-api:sha-6ad2dc5
     restart: unless-stopped
     # Must stay above SHUTDOWN_FORCE_MS (15 s) in backend/src/common/shutdown.service.ts.
     stop_grace_period: 20s
@@ -22,7 +22,7 @@ services:
   # api copies, so there is one image and one container for both jobs. The mounted file
   # replaces the config inside the image. The dev stack does not use it (Vite serves the app there).
   web:
-    image: ghcr.io/bahaa-aldein/nest-auth-web:sha-2475b12
+    image: ghcr.io/bahaa-aldein/nest-auth-web:sha-6ad2dc5
     restart: unless-stopped
     ports:
       - "${HTTP_PORT:-8080}:80"
