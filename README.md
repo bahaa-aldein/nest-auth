@@ -7,6 +7,28 @@ Sign-up and sign-in for a web app: a **NestJS + MongoDB** API and a **React + Ty
 - A protected endpoint (`GET /auth/me`) and a protected page ("Welcome to the application.")
 - Argon2 password hashing, a JWT in an `httpOnly` cookie, rate limiting, and no account enumeration on sign-in
 
+![The sign-in page of Nest Auth](docs/images/sign-in.png)
+
+## How it runs in production
+
+The production stack (`compose.production.yaml`) works like a small server. Only the nginx container publishes a port. It serves the React files and passes `/api` to three API copies, which share one rate limit through Redis. MongoDB needs a login and has no published port.
+
+```mermaid
+flowchart LR
+    B["Browser"] -->|"localhost:8080"| W["web (nginx)<br/>React files and the /api proxy"]
+    subgraph stack["Compose stack: only web publishes a port"]
+        W -->|"/api"| A1["api copy 1"]
+        W -->|"/api"| A2["api copy 2"]
+        W -->|"/api"| A3["api copy 3"]
+        A1 --> M[("MongoDB<br/>login required")]
+        A2 --> M
+        A3 --> M
+        A1 --> R[("Redis<br/>shared rate limit")]
+        A2 --> R
+        A3 --> R
+    end
+```
+
 ## Quick start
 
 You need Node.js 22 or newer and Docker (for MongoDB).
@@ -73,6 +95,8 @@ docker compose -f compose.yaml -f compose.production.yaml up -d --scale api=3
 | `proxy/`             | nginx config for the production `web` container: static files and `/api`  |
 | `.env.example`       | Settings for the production stack (`MONGO_PASSWORD`)                   |
 | `.github/workflows/` | CI: lint, test and Docker checks for both apps on every push and pull request. A push to `main` also scans the images and publishes them to GHCR |
+| `docs/images/`       | The screenshot used in this README                                      |
+| `LICENSE`            | The MIT license                                                         |
 
 ## How sign-in works
 
@@ -103,3 +127,7 @@ The backend integration and e2e tests start an in-memory MongoDB. The first run 
 | Environment validated at startup | A missing or malformed setting stops the app immediately instead of failing at the first request. |
 
 See the **Known limitations** section of [backend/README.md](backend/README.md) for what is deliberately out of scope.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
