@@ -1,6 +1,11 @@
-ARG NODE_IMAGE=node:24-trixie-slim
+ARG NODE_VERSION=24
+ARG NODE_IMAGE=node:${NODE_VERSION}-trixie-slim
 
 FROM ${NODE_IMAGE} AS base
+
+# Re-declare the ARG so it is in scope for this stage and its labels. The label then says
+# "24", not the exact version that the Node image sets in its own NODE_VERSION variable.
+ARG NODE_VERSION
 
 LABEL org.opencontainers.image.title="backend" \
   org.opencontainers.image.authors="Bahaa Aldein" \
