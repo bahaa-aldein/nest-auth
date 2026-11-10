@@ -94,7 +94,7 @@ docker compose -f compose.yaml -f compose.production.yaml up -d --scale api=3
 | `compose.production.yaml` | Production: published images (tags in the file), one public port, three API copies, secret files |
 | `proxy/`             | nginx config for the production `web` container: static files and `/api`  |
 | `.env.example`       | Settings for the production stack (`MONGO_PASSWORD`)                   |
-| `.github/workflows/` | CI: lint, test and Docker checks for both apps on every push and pull request. A push to `main` also scans the images and publishes them to GHCR |
+| `.github/workflows/` | CI: lint, test and Docker checks for both apps on every push and pull request. A push to `main` also scans the images (a fixable HIGH or CRITICAL finding stops the publish) and publishes them to GHCR |
 | `docs/images/`       | The screenshot used in this README                                      |
 | `LICENSE`            | The MIT license                                                         |
 
