@@ -15,7 +15,7 @@ concurrency:
 jobs:
   backend:
     name: Backend
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     defaults:
@@ -63,7 +63,7 @@ jobs:
 
   frontend:
     name: Frontend
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     defaults:
@@ -95,7 +95,7 @@ jobs:
 
   docker:
     name: Docker (${{ matrix.app }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -119,7 +119,7 @@ jobs:
     name: Publish (${{ matrix.app }})
     needs: [backend, frontend, docker]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
