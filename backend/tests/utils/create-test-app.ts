@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import { NestExpressApplication } from '@nestjs/platform-express';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { configureApp } from '../../src/app.setup.js';
