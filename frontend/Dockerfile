@@ -44,6 +44,11 @@ RUN npm run lint && npm test
 
 FROM ${NGINX_IMAGE} AS prod
 
+# The nginx base image can lag behind Alpine's security fixes. Upgrade libxslt
+# (CVE-2026-125350, fixed in 1.1.43-r4) so the Trivy scan in CI passes.
+# Remove this line once the base image ships the fixed version.
+RUN apk upgrade --no-cache libxslt
+
 # Re-declare the ARG so it is in scope for this stage and its labels
 ARG NODE_VERSION
 LABEL org.opencontainers.image.title="frontend" \
