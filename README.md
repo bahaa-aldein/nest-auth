@@ -13,21 +13,7 @@ Sign-up and sign-in for a web app: a **NestJS + MongoDB** API and a **React + Ty
 
 The production stack (`compose.production.yaml`) works like a small server. Only the nginx container publishes a port. It serves the React files and passes `/api` to three API copies, which share one rate limit through Redis. MongoDB needs a login and has no published port.
 
-```mermaid
-flowchart LR
-    B["Browser"] -->|"localhost:8080"| W["web (nginx)<br/>React files and the /api proxy"]
-    subgraph stack["Compose stack: only web publishes a port"]
-        W -->|"/api"| A1["api copy 1"]
-        W -->|"/api"| A2["api copy 2"]
-        W -->|"/api"| A3["api copy 3"]
-        A1 --> M[("MongoDB<br/>login required")]
-        A2 --> M
-        A3 --> M
-        A1 --> R[("Redis<br/>shared rate limit")]
-        A2 --> R
-        A3 --> R
-    end
-```
+![Production stack: browser to nginx, three API copies, MongoDB and Redis](docs/images/production-stack.png)
 
 ## Quick start
 
